@@ -23,6 +23,8 @@
 #import "FireTVMediaControl.h"
 #import "FireTVService.h"
 
+#import "NSMutableDictionary+NilSafe.h"
+
 #import <AmazonFling/RemoteMediaPlayer.h>
 
 
@@ -168,19 +170,13 @@
                             mimeType:(NSString *)mimeType
                     andIconURLString:(NSString *)iconURLString {
     NSMutableDictionary *metadataDict = [NSMutableDictionary dictionary];
-
-    void(^setValue)() = ^(NSString *__nonnull key, id __nullable value) {
-        if (value) {
-            metadataDict[key] = value;
-        }
-    };
-
-    setValue(@"type", mimeType);
-    setValue(@"title", title);
-    setValue(@"description", description);
-    setValue(@"poster", iconURLString);
+    [metadataDict setNullableObject:mimeType forKey:@"type"];
+    [metadataDict setNullableObject:title forKey:@"title"];
+    [metadataDict setNullableObject:description forKey:@"description"];
+    [metadataDict setNullableObject:iconURLString forKey:@"poster"];
     // "noreplay" hides the player's manual repeat dialog at EOF
-    setValue(@"noreplay", @YES);
+    metadataDict[@"noreplay"] = @YES;
+
     NSData *data = [NSJSONSerialization dataWithJSONObject:metadataDict
                                                    options:0
                                                      error:nil];
