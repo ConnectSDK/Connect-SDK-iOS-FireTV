@@ -22,6 +22,7 @@
 #import "FireTVCapabilityMixin.h"
 #import "FireTVMediaControl.h"
 #import "FireTVService.h"
+#import "SubtitleTrack.h"
 
 #import "NSMutableDictionary+NilSafe.h"
 
@@ -58,11 +59,7 @@
                     shouldLoop:(BOOL)shouldLoop
                        success:(MediaPlayerSuccessBlock)success
                        failure:(FailureBlock)failure {
-    NSString *iconURL = ((ImageInfo *)[mediaInfo.images firstObject]).url.absoluteString;
-    NSString *metadata = [self metadataStringForTitle:mediaInfo.title
-                                          description:mediaInfo.description
-                                             mimeType:mediaInfo.mimeType
-                                     andIconURLString:iconURL];
+    NSString *metadata = [self metadataStringForMediaInfo:mediaInfo];
 
     [self continueTask:[self.remoteMediaPlayer setMediaSourceToURL:mediaInfo.url.absoluteString
                                                           metaData:metadata
@@ -164,23 +161,39 @@
 
 #pragma mark - Helpers
 
-/// Returns a metadata JSON string for the given media info values.
-- (NSString *)metadataStringForTitle:(NSString *)title
-                         description:(NSString *)description
-                            mimeType:(NSString *)mimeType
-                    andIconURLString:(NSString *)iconURLString {
+/// Returns a metadata JSON string for the given media info.
+- (NSString *)metadataStringForMediaInfo:(MediaInfo *)mediaInfo {
     NSMutableDictionary *metadataDict = [NSMutableDictionary dictionary];
-    [metadataDict setNullableObject:mimeType forKey:@"type"];
-    [metadataDict setNullableObject:title forKey:@"title"];
-    [metadataDict setNullableObject:description forKey:@"description"];
-    [metadataDict setNullableObject:iconURLString forKey:@"poster"];
+    [metadataDict setNullableObject:mediaInfo.mimeType forKey:@"type"];
+    [metadataDict setNullableObject:mediaInfo.title forKey:@"title"];
+    [metadataDict setNullableObject:mediaInfo.description forKey:@"description"];
+    NSString *iconURL = ((ImageInfo *)[mediaInfo.images firstObject]).url.absoluteString;
+    [metadataDict setNullableObject:iconURL forKey:@"poster"];
     // "noreplay" hides the player's manual repeat dialog at EOF
     metadataDict[@"noreplay"] = @YES;
+
+    if (mediaInfo.subtitleTrack) {
+        NSDictionary *subtitleMetadata = [self subtitleMetadataForSubtitleTrack:mediaInfo.subtitleTrack];
+        metadataDict[@"tracks"] = @[subtitleMetadata];
+    }
 
     NSData *data = [NSJSONSerialization dataWithJSONObject:metadataDict
                                                    options:0
                                                      error:nil];
     return [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+}
+
+- (nonnull NSDictionary *)subtitleMetadataForSubtitleTrack:(nonnull SubtitleTrack *)subtitleTrack {
+    NSMutableDictionary *metadataDict = [NSMutableDictionary dictionary];
+    [metadataDict setNullableObject:subtitleTrack.url.absoluteString
+                             forKey:@"src"];
+    [metadataDict setNullableObject:(subtitleTrack.language ?: @"")
+                             forKey:@"srclang"];
+    [metadataDict setNullableObject:(subtitleTrack.label ?: @"")
+                             forKey:@"label"];
+    metadataDict[@"kind"] = @"subtitles";
+
+    return metadataDict;
 }
 
 #pragma mark - Forwarding to Configuration

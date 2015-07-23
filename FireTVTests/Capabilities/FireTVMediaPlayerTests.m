@@ -22,6 +22,7 @@
 #import "FireTVCapabilityMixin.h"
 #import "FireTVMediaControl.h"
 #import "FireTVService.h"
+#import "SubtitleTrack.h"
 
 #import "XCTestCase+TaskTests.h"
 
@@ -155,7 +156,7 @@ static NSString *const kMixedTitle = @"Hello, <World> &]]> \"others'\\ ура ξ
                                             success:nil
                                             failure:nil];
     }
-                                          andExpectedMetadata:metadata];
+                                           andIncludeMetadata:metadata];
 }
 
 - (void)testSetMediaSourceSuccessShouldCallDisplayImageSuccessBlock {
@@ -224,7 +225,7 @@ static NSString *const kMixedTitle = @"Hello, <World> &]]> \"others'\\ ура ξ
                                          success:nil
                                          failure:nil];
     }
-                                          andExpectedMetadata:metadata];
+                                          andIncludeMetadata:metadata];
 }
 
 - (void)testSetMediaSourceSuccessShouldCallPlayMediaSuccessBlock {
@@ -327,6 +328,83 @@ static NSString *const kMixedTitle = @"Hello, <World> &]]> \"others'\\ ура ξ
                                           success:nil
                                           failure:nil],
                      @"failure nil block should be allowed");
+}
+
+#pragma mark - Subtitles Support Tests
+
+- (void)testPlayVideoWithSubtitlesRequestShouldContainOneTrack {
+    [self checkPlayMediaWithSubtitles:[self mediaInfoWithSubtitle]
+               metadataShouldPassTest:^(NSDictionary *metadata) {
+                   NSArray *tracks = metadata[@"tracks"];
+                   XCTAssertEqual(tracks.count, 1);
+               }];
+}
+
+- (void)testPlayVideoWithSubtitlesRequestShouldContainTrackSrc {
+    MediaInfo *mediaInfo = [self mediaInfoWithSubtitle];
+    [self checkPlayMediaWithSubtitles:mediaInfo
+               metadataShouldPassTest:^(NSDictionary *metadata) {
+                   NSDictionary *track = [metadata[@"tracks"] firstObject];
+                   XCTAssertEqualObjects(track[@"src"],
+                                         mediaInfo.subtitleTrack.url.absoluteString);
+               }];
+}
+
+- (void)testPlayVideoWithSubtitlesRequestTrackKindShouldBeSubtitles {
+    MediaInfo *mediaInfo = [self mediaInfoWithSubtitle];
+    [self checkPlayMediaWithSubtitles:mediaInfo
+               metadataShouldPassTest:^(NSDictionary *metadata) {
+                   NSDictionary *track = [metadata[@"tracks"] firstObject];
+                   XCTAssertEqualObjects(track[@"kind"], @"subtitles");
+               }];
+}
+
+- (void)testPlayVideoWithSubtitlesRequestShouldContainTrackSrcLang {
+    MediaInfo *mediaInfo = [self mediaInfoWithSubtitle];
+    [self checkPlayMediaWithSubtitles:mediaInfo
+               metadataShouldPassTest:^(NSDictionary *metadata) {
+                   NSDictionary *track = [metadata[@"tracks"] firstObject];
+                   XCTAssertEqualObjects(track[@"srclang"],
+                                         mediaInfo.subtitleTrack.language);
+               }];
+}
+
+- (void)testPlayVideoWithSubtitlesRequestShouldContainTrackLabel {
+    MediaInfo *mediaInfo = [self mediaInfoWithSubtitle];
+    [self checkPlayMediaWithSubtitles:mediaInfo
+               metadataShouldPassTest:^(NSDictionary *metadata) {
+                   NSDictionary *track = [metadata[@"tracks"] firstObject];
+                   XCTAssertEqualObjects(track[@"label"],
+                                         mediaInfo.subtitleTrack.label);
+               }];
+}
+
+- (void)testPlayVideoWithoutSubtitlesRequestShouldNotContainTracks {
+    [self checkPlayMediaWithSubtitles:self.audioInfo
+               metadataShouldPassTest:^(NSDictionary *metadata) {
+                   NSArray *tracks = metadata[@"tracks"];
+                   XCTAssertNil(tracks);
+               }];
+}
+
+- (void)testPlayVideoWithSubtitlesWithoutLanguageRequestShouldContainEmptyTrackSrcLang {
+    // because "srclang" is required
+    MediaInfo *mediaInfo = [self mediaInfoWithSubtitleLanguage:nil label:@"Test"];
+    [self checkPlayMediaWithSubtitles:mediaInfo
+               metadataShouldPassTest:^(NSDictionary *metadata) {
+                   NSDictionary *track = [metadata[@"tracks"] firstObject];
+                   XCTAssertEqualObjects(track[@"srclang"], @"");
+               }];
+}
+
+- (void)testPlayVideoWithSubtitlesWithoutLabelRequestShouldContainEmptyTrackLabel {
+    // because "label" is required
+    MediaInfo *mediaInfo = [self mediaInfoWithSubtitleLanguage:@"en" label:nil];
+    [self checkPlayMediaWithSubtitles:mediaInfo
+               metadataShouldPassTest:^(NSDictionary *metadata) {
+                   NSDictionary *track = [metadata[@"tracks"] firstObject];
+                   XCTAssertEqualObjects(track[@"label"], @"");
+               }];
 }
 
 #pragma mark - MediaPlayer Deprecated Method Tests
@@ -646,7 +724,7 @@ static NSString *const kMixedTitle = @"Hello, <World> &]]> \"others'\\ ура ξ
                                @"poster": @"http://example.com/image",
                                @"noreplay": @YES};
     [self checkMediaShouldSetMediaSourceAndAutoplayUsingBlock:block
-                                          andExpectedMetadata:metadata];
+                                           andIncludeMetadata:metadata];
 }
 
 - (void)checkPlayMediaShouldSetMediaSourceAndAutoplayUsingBlock:(VoidActionBlock)block {
@@ -657,20 +735,26 @@ static NSString *const kMixedTitle = @"Hello, <World> &]]> \"others'\\ ура ξ
                                @"poster": @"http://example.com/image",
                                @"noreplay": @YES};
     [self checkMediaShouldSetMediaSourceAndAutoplayUsingBlock:block
-                                              andExpectedMetadata:metadata];
+                                           andIncludeMetadata:metadata];
 }
 
 - (void)checkMediaShouldSetMediaSourceAndAutoplayUsingBlock:(VoidActionBlock)block
-                                        andExpectedMetadata:(NSDictionary *)metadata {
+                                         andIncludeMetadata:(NSDictionary *)expectedMetadata {
+    [self checkMediaShouldSetMediaSourceAndAutoplayUsingBlock:block
+                                 andMetadataVerificationBlock:^(NSDictionary *metadata) {
+                                     [self assertDictionary:metadata
+                                         isASubdictionaryOf:expectedMetadata];
+                                 }];
+}
+
+- (void)checkMediaShouldSetMediaSourceAndAutoplayUsingBlock:(VoidActionBlock)block
+                               andMetadataVerificationBlock:(void (^)(NSDictionary *metadata))checkBlock {
     BOOL(^metadataCheckBlock)(NSString *json) = ^(NSString *json) {
         NSData *data = [json dataUsingEncoding:NSUTF8StringEncoding];
-        NSError *error;
-        NSDictionary *dict = [NSJSONSerialization JSONObjectWithData:data
-                                                             options:0
-                                                               error:&error];
-        XCTAssertNil(error, @"Error parsing metadata JSON");
-
-        XCTAssertEqualObjects(metadata, dict, @"The metadata is incorrect");
+        NSDictionary *metadata = [NSJSONSerialization JSONObjectWithData:data
+                                                                 options:0
+                                                                   error:nil];
+        checkBlock(metadata);
 
         return YES;
     };
@@ -720,6 +804,73 @@ static NSString *const kMixedTitle = @"Hello, <World> &]]> \"others'\\ ура ξ
                                                                              autoPlay:YES
                                                                   andPlayInBackground:NO])
       shouldCallFailureBlockUsingBlock:block];
+}
+
+#pragma mark - Subtitle Helpers
+
+- (void)checkPlayMediaWithSubtitles:(MediaInfo *)mediaInfo
+             metadataShouldPassTest:(void (^)(NSDictionary *metadata))checkBlock {
+    [self checkMediaShouldSetMediaSourceUsingBlock:^{
+            [self.mediaPlayer playMediaWithMediaInfo:mediaInfo
+                                          shouldLoop:NO
+                                             success:nil
+                                             failure:nil];
+        }
+                      andMetadataVerificationBlock:checkBlock];
+}
+
+- (void)checkMediaShouldSetMediaSourceUsingBlock:(VoidActionBlock)block
+                    andMetadataVerificationBlock:(void (^)(NSDictionary *metadata))checkBlock {
+    BOOL(^metadataCheckBlock)(NSString *json) = ^(NSString *json) {
+        NSData *data = [json dataUsingEncoding:NSUTF8StringEncoding];
+        NSDictionary *metadata = [NSJSONSerialization JSONObjectWithData:data
+                                                                 options:0
+                                                                   error:nil];
+        checkBlock(metadata);
+
+        return YES;
+    };
+
+    [OCMExpect([self.playerMock setMediaSourceToURL:OCMOCK_ANY
+                                           metaData:[OCMArg checkWithBlock:metadataCheckBlock]
+                                           autoPlay:YES
+                                andPlayInBackground:NO]) ignoringNonObjectArgs];
+
+    block();
+
+    OCMVerifyAll(self.playerMock);
+}
+
+- (MediaInfo *)mediaInfoWithSubtitle {
+    return [self mediaInfoWithSubtitleLanguage:@"en" label:@"Test"];
+}
+
+- (MediaInfo *)mediaInfoWithSubtitleLanguage:(NSString *)language
+                                       label:(NSString *)label {
+    NSURL *subtitleURL = [NSURL URLWithString:@"http://example.com/"];
+    MediaInfo *mediaInfo = self.audioInfo;
+    SubtitleTrack *track = [SubtitleTrack trackWithURL:subtitleURL
+                                              andBlock:^(SubtitleTrackBuilder *builder) {
+                                                  builder.language = language;
+                                                  builder.label = label;
+                                              }];
+    mediaInfo.subtitleTrack = track;
+
+    return mediaInfo;
+}
+
+#pragma mark - Custom Asserts
+
+- (void)assertDictionary:(NSDictionary *)dictionary
+      isASubdictionaryOf:(NSDictionary *)subdictionary {
+    NSArray *subkeys = subdictionary.allKeys;
+    NSMutableDictionary *actualSubdictionary = [NSMutableDictionary new];
+    [dictionary enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL *stop) {
+        if ([subkeys containsObject:key]) {
+            actualSubdictionary[key] = obj;
+        }
+    }];
+    XCTAssertEqualObjects(subdictionary, actualSubdictionary);
 }
 
 @end
