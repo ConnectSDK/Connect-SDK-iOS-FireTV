@@ -22,7 +22,7 @@
 #import "FireTVCapabilityMixin.h"
 #import "FireTVMediaControl.h"
 #import "FireTVService.h"
-#import "SubtitleTrack.h"
+#import "SubtitleInfo.h"
 
 #import "NSMutableDictionary+NilSafe.h"
 
@@ -172,8 +172,8 @@
     // "noreplay" hides the player's manual repeat dialog at EOF
     metadataDict[@"noreplay"] = @YES;
 
-    if (mediaInfo.subtitleTrack) {
-        NSDictionary *subtitleMetadata = [self subtitleMetadataForSubtitleTrack:mediaInfo.subtitleTrack];
+    if (mediaInfo.subtitleInfo) {
+        NSDictionary *subtitleMetadata = [self subtitleMetadataForSubtitleInfo:mediaInfo.subtitleInfo];
         metadataDict[@"tracks"] = @[subtitleMetadata];
     }
 
@@ -183,13 +183,13 @@
     return [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
 }
 
-- (nonnull NSDictionary *)subtitleMetadataForSubtitleTrack:(nonnull SubtitleTrack *)subtitleTrack {
+- (nonnull NSDictionary *)subtitleMetadataForSubtitleInfo:(nonnull SubtitleInfo *)subtitleInfo {
     NSMutableDictionary *metadataDict = [NSMutableDictionary dictionary];
-    [metadataDict setNullableObject:subtitleTrack.url.absoluteString
+    [metadataDict setNullableObject:subtitleInfo.url.absoluteString
                              forKey:@"src"];
-    [metadataDict setNullableObject:(subtitleTrack.language ?: @"")
+    [metadataDict setNullableObject:(subtitleInfo.language ?: @"")
                              forKey:@"srclang"];
-    [metadataDict setNullableObject:(subtitleTrack.label ?: @"")
+    [metadataDict setNullableObject:(subtitleInfo.label ?: @"")
                              forKey:@"label"];
     metadataDict[@"kind"] = @"subtitles";
 

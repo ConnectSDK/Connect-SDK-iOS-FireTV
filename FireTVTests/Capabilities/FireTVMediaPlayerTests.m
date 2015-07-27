@@ -22,7 +22,7 @@
 #import "FireTVCapabilityMixin.h"
 #import "FireTVMediaControl.h"
 #import "FireTVService.h"
-#import "SubtitleTrack.h"
+#import "SubtitleInfo.h"
 
 #import "XCTestCase+TaskTests.h"
 
@@ -346,7 +346,7 @@ static NSString *const kMixedTitle = @"Hello, <World> &]]> \"others'\\ ура ξ
                metadataShouldPassTest:^(NSDictionary *metadata) {
                    NSDictionary *track = [metadata[@"tracks"] firstObject];
                    XCTAssertEqualObjects(track[@"src"],
-                                         mediaInfo.subtitleTrack.url.absoluteString);
+                                         mediaInfo.subtitleInfo.url.absoluteString);
                }];
 }
 
@@ -365,7 +365,7 @@ static NSString *const kMixedTitle = @"Hello, <World> &]]> \"others'\\ ура ξ
                metadataShouldPassTest:^(NSDictionary *metadata) {
                    NSDictionary *track = [metadata[@"tracks"] firstObject];
                    XCTAssertEqualObjects(track[@"srclang"],
-                                         mediaInfo.subtitleTrack.language);
+                                         mediaInfo.subtitleInfo.language);
                }];
 }
 
@@ -375,7 +375,7 @@ static NSString *const kMixedTitle = @"Hello, <World> &]]> \"others'\\ ура ξ
                metadataShouldPassTest:^(NSDictionary *metadata) {
                    NSDictionary *track = [metadata[@"tracks"] firstObject];
                    XCTAssertEqualObjects(track[@"label"],
-                                         mediaInfo.subtitleTrack.label);
+                                         mediaInfo.subtitleInfo.label);
                }];
 }
 
@@ -849,12 +849,12 @@ static NSString *const kMixedTitle = @"Hello, <World> &]]> \"others'\\ ура ξ
                                        label:(NSString *)label {
     NSURL *subtitleURL = [NSURL URLWithString:@"http://example.com/"];
     MediaInfo *mediaInfo = self.audioInfo;
-    SubtitleTrack *track = [SubtitleTrack trackWithURL:subtitleURL
-                                              andBlock:^(SubtitleTrackBuilder *builder) {
-                                                  builder.language = language;
-                                                  builder.label = label;
-                                              }];
-    mediaInfo.subtitleTrack = track;
+    SubtitleInfo *subtitleInfo = [SubtitleInfo infoWithURL:subtitleURL
+                                                  andBlock:^(SubtitleInfoBuilder *builder) {
+                                                      builder.language = language;
+                                                      builder.label = label;
+                                                  }];
+    mediaInfo.subtitleInfo = subtitleInfo;
 
     return mediaInfo;
 }
