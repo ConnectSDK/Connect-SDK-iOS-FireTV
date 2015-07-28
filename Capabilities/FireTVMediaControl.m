@@ -23,6 +23,8 @@
 #import "FireTVCapabilityMixin.h"
 #import "SubscriptionDeduplicator.h"
 
+#import "NSMutableDictionary+NilSafe.h"
+
 #import <AmazonFling/MediaPlayerInfo.h>
 #import <AmazonFling/RemoteMediaPlayer.h>
 
@@ -178,16 +180,12 @@ convertingMillisecondsToTimeIntervalWithSuccess:success
       NSDictionary *mediaInfo = [NSJSONSerialization JSONObjectWithData:mediaInfoJSONData
                                                                 options:0
                                                                   error:nil];
-      NSMutableDictionary *metadataDict = [NSMutableDictionary dictionaryWithCapacity:3];
-      void(^setValue)() = ^(NSString *__nonnull key, NSString *__nullable value) {
-          if (value) {
-              metadataDict[key] = value;
-          }
-      };
 
-      setValue(@"title", mediaInfo[@"title"]);
-      setValue(@"subtitle", mediaInfo[@"description"]);
-      setValue(@"iconURL", mediaInfo[@"poster"]);
+      NSMutableDictionary *metadataDict = [NSMutableDictionary dictionary];
+      [metadataDict setNullableObject:mediaInfo[@"title"] forKey:@"title"];
+      [metadataDict setNullableObject:mediaInfo[@"description"]
+                               forKey:@"subtitle"];
+      [metadataDict setNullableObject:mediaInfo[@"poster"] forKey:@"iconURL"];
       success([metadataDict copy]);
   }
         ifSuccessBlock:success
