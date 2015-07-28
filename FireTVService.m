@@ -129,7 +129,7 @@ NSString *const kConnectSDKFireTVServiceId = @"FireTV";
                               kMediaPlayerMetaDataDescription,
                               kMediaPlayerMetaDataThumbnail,
                               kMediaPlayerMetaDataMimeType,
-                              kMediaPlayerSubtitleVTT,
+                              kMediaPlayerSubtitleWebVTT,
 
                               kMediaControlPlay,
                               kMediaControlPause,

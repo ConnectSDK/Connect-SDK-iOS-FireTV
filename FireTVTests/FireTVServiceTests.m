@@ -202,7 +202,7 @@
                                    kMediaPlayerMetaDataDescription,
                                    kMediaPlayerMetaDataThumbnail,
                                    kMediaPlayerMetaDataMimeType,
-                                   kMediaPlayerSubtitleVTT,
+                                   kMediaPlayerSubtitleWebVTT,
                                    kMediaControlPlay,
                                    kMediaControlPause,
                                    kMediaControlStop,
