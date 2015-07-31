@@ -18,7 +18,7 @@
 //  limitations under the License.
 //
 
-#import "MediaControl.h"
+#import "XCTestCase+Common.h"
 
 @class BFTask;
 
@@ -28,14 +28,6 @@
  * please check the usage examples in tests.
  */
 @interface XCTestCase (TaskTests)
-
-/**
- * A block type that should do an action on an SUT (system under test) and use
- * the provided block verifiers as the callbacks to verify they are
- * called/not called according to the check method.
- */
-typedef void(^ActionBlock)(SuccessBlock successVerifier,
-                           FailureBlock failureVerifier);
 
 /**
  * Checks that a successful void task returned from a stub @c recorder calls the
@@ -56,11 +48,6 @@ shouldCallSuccessBlockUsingBlock:(ActionBlock)block;
  */
 - (void)checkTaskErrorOnStubRecorder:(OCMStubRecorder *)recorder
     shouldCallFailureBlockUsingBlock:(ActionBlock)block;
-/**
- * Checks that the @c FailureBlock of the operation done in the @c block is
- * called with the @c ConnectStatusCodeNotSupported error code.
- */
-- (void)checkOperationShouldReturnNotSupportedErrorUsingBlock:(ActionBlock)block;
 
 /**
  * Checks that a successful void task returned from a stub @c recorder
