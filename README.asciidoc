@@ -19,7 +19,9 @@ For more information about Connect SDK, visit the https://github.com/ConnectSDK/
 
 . Download the Amazon Fling SDK from https://developer.amazon.com/public/apis/experience/fling/docs/amazon-fling-sdk-download[the Amazon website].
 . Unzip `ios-sdk/frameworks/AmazonFling.framework` and `ios-sdk/frameworks/third_party_framework/Bolts.framework` into the `modules/firetv/Frameworks/` directory.
-. In your Project link `AmazonFling.framework`, `Bolts.framework`, `libc++.dylib`, and `AdSupport.framework` with your application target.
+. *In your project*: link `AmazonFling.framework`, `Bolts.framework`, `libc++.dylib`, and `AdSupport.framework` with your application target:
+  * _either_ drag them from the `ConnectSDK` project into your project's `Frameworks` group and then add them to your target;
+  * _or_ go to your project settings, select the application target, "Build Phases" tab, in "Link Binary With Libraries" section click "\+", then "Add Other…", and select `AmazonFling.framework` and `Bolts.framework` files; then click "+" and add system `libc++.dylib` and `AdSupport.framework` files.
 
 === Connect SDK Lite Integration
 
