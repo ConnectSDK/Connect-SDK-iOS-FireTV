@@ -22,6 +22,8 @@
 #import "ConnectError.h"
 #import "DispatchQueueBlockRunner.h"
 
+#import "NSObject+FeatureNotSupported_Private.h"
+
 #import <Bolts/BFExecutor.h>
 #import <Bolts/BFTask.h>
 
@@ -82,13 +84,7 @@ withSuccessCompleter:(void (^ __nonnull)(id __nullable))successCompleter
 }
 
 - (nullable id)callFailureBlockWithUnsupportedError:(nullable FailureBlock)failure {
-    if (failure) {
-        NSError *error = [ConnectError generateErrorWithCode:ConnectStatusCodeNotSupported
-                                                  andDetails:nil];
-        failure(error);
-    }
-
-    return nil;
+    return [self sendNotSupportedFailure:failure];
 }
 
 #pragma mark - Helpers

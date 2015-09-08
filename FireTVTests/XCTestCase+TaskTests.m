@@ -53,17 +53,6 @@ shouldCallFailureBlockWithError:task.error
               usingBlock:block];
 }
 
-- (void)checkOperationShouldReturnNotSupportedErrorUsingBlock:(ActionBlock)block {
-    NSDictionary *errorInfo = @{NSLocalizedDescriptionKey:@"This feature is not supported."};
-    NSError *unsupportedError = [NSError errorWithDomain:ConnectErrorDomain
-                                                    code:ConnectStatusCodeNotSupported
-                                                userInfo:errorInfo];
-    [self checkTaskError:nil
-          onStubRecorder:nil
-shouldCallFailureBlockWithError:unsupportedError
-              usingBlock:block];
-}
-
 - (void)checkTaskSuccessOnStubRecorder:(OCMStubRecorder *)recorder
  shouldAsyncCallSuccessBlockUsingBlock:(ActionBlock)block {
     BFTask *task = [BFTask taskWithResult:nil];

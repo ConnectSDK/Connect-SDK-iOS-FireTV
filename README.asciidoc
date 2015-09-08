@@ -19,7 +19,9 @@ For more information about Connect SDK, visit the https://github.com/ConnectSDK/
 
 . Download the Amazon Fling SDK from https://developer.amazon.com/public/apis/experience/fling/docs/amazon-fling-sdk-download[the Amazon website].
 . Unzip `ios-sdk/frameworks/AmazonFling.framework` and `ios-sdk/frameworks/third_party_framework/Bolts.framework` into the `modules/firetv/Frameworks/` directory.
-. Link `AmazonFling.framework`, `Bolts.framework`, `libc++.dylib`, and `AdSupport.framework` with your application target.
+. *In your project*: link `AmazonFling.framework`, `Bolts.framework`, `libc++.dylib`, and `AdSupport.framework` with your application target:
+  * _either_ drag them from the `ConnectSDK` project into your project's `Frameworks` group and then add them to your target;
+  * _or_ go to your project settings, select the application target, "Build Phases" tab, in "Link Binary With Libraries" section click "\+", then "Add Other…", and select `AmazonFling.framework` and `Bolts.framework` files; then click "+" and add system `libc++.dylib` and `AdSupport.framework` files.
 
 === Connect SDK Lite Integration
 
@@ -46,6 +48,7 @@ git submodule add https://github.com/ConnectSDK/Connect-SDK-iOS-FireTV.git firet
 - Play state subscription: currently, `FireTVService`'s `-[MediaControl subscribePlayStateWithSuccess:failure:]` only supports one subscription, that is this method allows adding multiple handlers, but the returned object is the same, so calling `-unsubscribe` will unsubscribe all the handlers.
 - Stopping discovery: due to the specifics of the Amazon Fling SDK, stopping the discovery provider (via `-[DiscoveryManager stopDiscovery]`) will remove all found Fire TV devices! The Fling SDK's discovery part is required for `FireTVService` to work properly.
 - FireTV devices and DIAL: Amazon Fling SDK doesn't provide the IP address of a device, but a unique identifier instead. However, the DIAL device description doesn't include that identifier, so Connect SDK is unable to merge those two services in the same `ConnectableDevice` at this point. When using both `FireTVService` and `DIALService`, you will get two different `ConnectableDevice` objects with one of the services, representing the same physical FireTV device.
+- FireTV service supports `WebVTT` format only. Subtitles on Fire TV are hidden by default. To display them, the user should manually pick one in the media player (click the "Options" button on the remote). The Fling SDK doesn't provide any way to make them appear remotely.
 
 == License
 
